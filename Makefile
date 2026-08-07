@@ -61,3 +61,7 @@ license-check-all:
 hf-benchmark:
 	pip install -e ".[huggingface]" -q
 	pioneer-hf-benchmark --mining-samples 500
+
+ingest:
+	pip install -e . -q
+	pioneer-ingest --chemical-limit 200 --er-limit 100

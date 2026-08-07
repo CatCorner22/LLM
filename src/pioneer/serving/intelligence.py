@@ -4,12 +4,14 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter
-from pydantic import BaseModel
+from fastapi import APIRouter, Query
+from pydantic import BaseModel, Field
 
 from pioneer.intelligence.advisory.advisor import BusinessAdvisor
 from pioneer.intelligence.benchmark.huggingface import HFBenchmarkReport
 from pioneer.intelligence.benchmark.runner import BenchmarkReport, BenchmarkRunner
+from pioneer.intelligence.ingestion.knowledge import KnowledgeCategory, KnowledgeRecord
+from pioneer.intelligence.ingestion.scheduler import IngestionScheduler, KnowledgeStore
 from pioneer.intelligence.risk.composite import CompositeRiskEngine
 from pioneer.intelligence.risk.models import AssetPortfolio, RiskAssessment
 from pioneer.intelligence.samples import sample_portfolio
@@ -25,6 +27,12 @@ class PortfolioRequest(BaseModel):
 
 class AdvisoryResponse(BaseModel):
     report: dict[str, Any]
+
+
+class KnowledgeStatsResponse(BaseModel):
+    store: dict[str, int] = Field(default_factory=dict)
+    recent_chemicals: list[KnowledgeRecord] = Field(default_factory=list)
+    recent_health: list[KnowledgeRecord] = Field(default_factory=list)
 
 
 @router.post("/risk", response_model=RiskAssessment)
@@ -56,3 +64,31 @@ async def hf_benchmark() -> HFBenchmarkReport:
     from pioneer.intelligence.benchmark.huggingface import HFBenchmarkConfig, HFBenchmarkRunner
 
     return HFBenchmarkRunner(HFBenchmarkConfig(mining_sample_size=200)).run()
+
+
+@router.post("/ingestion/run")
+async def run_ingestion() -> dict[str, int]:
+    return await IngestionScheduler().run_once()
+
+
+@router.get("/knowledge", response_model=KnowledgeStatsResponse)
+async def knowledge_base(
+    limit: int = Query(default=20, ge=1, le=200),
+) -> KnowledgeStatsResponse:
+    store = KnowledgeStore()
+    return KnowledgeStatsResponse(
+        store=store.stats(),
+        recent_chemicals=store.load_knowledge(limit, category=KnowledgeCategory.CHEMICAL),
+        recent_health=store.load_knowledge(limit, category=KnowledgeCategory.HEALTH),
+    )
+
+
+@router.get("/knowledge/recent", response_model=list[KnowledgeRecord])
+async def recent_knowledge(
+    limit: int = Query(default=50, ge=1, le=500),
+    category: KnowledgeCategory | None = None,
+) -> list[KnowledgeRecord]:
+    store = KnowledgeStore()
+    if category is None:
+        return store.load_all_knowledge(limit)
+    return store.load_knowledge(limit, category=category)

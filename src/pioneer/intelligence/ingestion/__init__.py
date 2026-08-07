@@ -6,6 +6,15 @@ from pioneer.intelligence.ingestion.feeds import (
     FeedSource,
     NewsFeedIngester,
 )
+from pioneer.intelligence.ingestion.knowledge import (
+    KnowledgeCategory,
+    KnowledgeRecord,
+    KnowledgeSourceType,
+)
+from pioneer.intelligence.ingestion.public_data import (
+    CDCEmergencyVisitIngester,
+    EPAChemicalIngester,
+)
 from pioneer.intelligence.ingestion.scheduler import (
     IngestionConfig,
     IngestionScheduler,
@@ -13,11 +22,16 @@ from pioneer.intelligence.ingestion.scheduler import (
 )
 
 __all__ = [
+    "CDCEmergencyVisitIngester",
+    "EPAChemicalIngester",
     "FeedCategory",
     "FeedItem",
     "FeedSource",
     "IngestionConfig",
     "IngestionScheduler",
+    "KnowledgeCategory",
+    "KnowledgeRecord",
+    "KnowledgeSourceType",
     "KnowledgeStore",
     "NewsFeedIngester",
 ]

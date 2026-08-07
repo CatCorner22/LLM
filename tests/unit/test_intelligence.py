@@ -51,5 +51,46 @@ def test_advisor_includes_news_signals() -> None:
             relevance_score=0.8,
         )
     ]
-    report = BusinessAdvisor().generate_report(portfolio, feed_items=feed)
+    report = BusinessAdvisor().generate_report(portfolio, feed_items=feed, load_knowledge=False)
     assert len(report.news_signals) == 1
+
+
+@pytest.mark.unit
+def test_advisor_includes_knowledge_signals() -> None:
+    from pioneer.intelligence.ingestion.knowledge import (
+        KnowledgeCategory,
+        KnowledgeRecord,
+        KnowledgeSourceType,
+    )
+
+    portfolio = sample_portfolio()
+    records = [
+        KnowledgeRecord(
+            id="chem-1",
+            source_type=KnowledgeSourceType.EPA_TRI,
+            source_id="tri_chem_info",
+            title="Formaldehyde",
+            summary="Carcinogen",
+            category=KnowledgeCategory.CHEMICAL,
+            published_at=datetime.now(UTC),
+            relevance_score=0.9,
+        ),
+        KnowledgeRecord(
+            id="health-1",
+            source_type=KnowledgeSourceType.CDC_NCHS,
+            source_id="cdc_er_visits",
+            title="Injury and poisoning (2022)",
+            summary="42M visits",
+            category=KnowledgeCategory.HEALTH,
+            published_at=datetime.now(UTC),
+            relevance_score=0.85,
+        ),
+    ]
+    report = BusinessAdvisor().generate_report(
+        portfolio,
+        knowledge_records=records,
+        load_knowledge=False,
+        run_scenarios=False,
+    )
+    assert len(report.chemical_signals) == 1
+    assert len(report.health_signals) == 1

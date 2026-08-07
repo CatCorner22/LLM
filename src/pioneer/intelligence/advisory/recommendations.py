@@ -42,3 +42,5 @@ class AdvisoryReport(BaseModel):
     recommendations: list[BusinessRecommendation]
     scenario_highlights: list[str] = Field(default_factory=list)
     news_signals: list[str] = Field(default_factory=list)
+    chemical_signals: list[str] = Field(default_factory=list)
+    health_signals: list[str] = Field(default_factory=list)

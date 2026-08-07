@@ -64,6 +64,13 @@ class NewsFeedIngester:
             "inspection",
             "recall",
             "fire",
+            "chemical",
+            "toxic",
+            "poison",
+            "carcinogen",
+            "hazmat",
+            "spill",
+            "exposure",
         }
     )
 

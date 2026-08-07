@@ -10,6 +10,8 @@ from pioneer.intelligence.advisory.recommendations import (
     RecommendationPriority,
 )
 from pioneer.intelligence.ingestion.feeds import FeedItem
+from pioneer.intelligence.ingestion.knowledge import KnowledgeCategory, KnowledgeRecord
+from pioneer.intelligence.ingestion.scheduler import KnowledgeStore
 from pioneer.intelligence.risk.composite import CompositeRiskEngine
 from pioneer.intelligence.risk.models import AssetPortfolio, RiskAssessment, RiskCategory
 from pioneer.intelligence.scenarios.runner import AutonomousScenarioRunner, ScenarioRunResult
@@ -142,17 +144,34 @@ class BusinessAdvisor:
             for item in feed_items[:5]
         ]
 
+    def _knowledge_signals(
+        self, records: list[KnowledgeRecord], category: KnowledgeCategory, limit: int = 5
+    ) -> list[str]:
+        filtered = [record for record in records if record.category == category]
+        filtered.sort(key=lambda record: record.relevance_score, reverse=True)
+        return [
+            f"[{record.source_id}] {record.title} (relevance={record.relevance_score:.2f})"
+            for record in filtered[:limit]
+        ]
+
     def generate_report(
         self,
         portfolio: AssetPortfolio,
         feed_items: list[FeedItem] | None = None,
+        knowledge_records: list[KnowledgeRecord] | None = None,
         *,
         run_scenarios: bool = True,
+        load_knowledge: bool = True,
     ) -> AdvisoryReport:
         assessment = self.engine.assess(portfolio)
         scenario_result = (
             self.scenario_runner.run_autonomous_suite(portfolio) if run_scenarios else None
         )
+
+        records = knowledge_records
+        if records is None and load_knowledge:
+            records = KnowledgeStore().load_all_knowledge(limit=50)
+        records = records or []
 
         recommendations = self._recommendations_from_assessment(assessment)
 
@@ -203,4 +222,6 @@ class BusinessAdvisor:
             if scenario_result
             else [],
             news_signals=self._news_signals(feed_items or []),
+            chemical_signals=self._knowledge_signals(records, KnowledgeCategory.CHEMICAL),
+            health_signals=self._knowledge_signals(records, KnowledgeCategory.HEALTH),
         )

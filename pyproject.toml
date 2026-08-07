@@ -93,6 +93,7 @@ pioneer-advise = "pioneer.cli.advise:main"
 pioneer-scenarios = "pioneer.cli.scenarios:main"
 pioneer-benchmark = "pioneer.cli.benchmark:main"
 pioneer-hf-benchmark = "pioneer.cli.hf_benchmark:main"
+pioneer-ingest = "pioneer.cli.ingest:main"
 
 [project.urls]
 Documentation = "https://github.com/pioneer-ml/pioneer-ml#readme"
@@ -141,6 +142,7 @@ ignore = ["PLR0913", "PLR2004", "TC001", "TC003", "PLW0108", "UP042", "B024"]
 "src/pioneer/inference/engine.py" = ["PLC0415"]
 "src/pioneer/intelligence/benchmark/competitors.py" = ["PLC0415", "ARG002"]
 "src/pioneer/intelligence/benchmark/huggingface.py" = ["PLC0415"]
+"src/pioneer/intelligence/ingestion/public_data.py" = ["PLC0415"]
 "src/pioneer/intelligence/ingestion/feeds.py" = ["ICN001", "DTZ007"]
 "src/pioneer/intelligence/risk/composite.py" = ["RUF012"]
 

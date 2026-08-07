@@ -77,6 +77,28 @@ pioneer-hf-benchmark --with-hf-model --model facebook/bart-large-mnli
 
 API: `GET /v1/intelligence/hf-benchmark`
 
+### Knowledge base (chemical inventory + CDC ER visits)
+
+Populate the intelligence knowledge base from public datasets:
+
+| Source | Dataset | Stored as |
+|--------|---------|-----------|
+| EPA TRI | [TRI_CHEM_INFO](https://www.epa.gov/toxics-release-inventory-tri-program) chemical metadata | `data/intelligence/chemical_inventory.jsonl` |
+| CDC NCHS | [Emergency Department Visits 2016–2022](https://data.cdc.gov/NCHS/Estimates-of-Emergency-Department-Visits-in-the-Un/ycxr-emue) | `data/intelligence/cdc_er_visits.jsonl` |
+
+```bash
+# Ingest EPA carcinogen inventory + CDC injury/poisoning ER statistics
+pioneer-ingest
+pioneer-ingest --chemical-limit 500 --er-limit 200 --json
+
+# API (requires [serve])
+# POST /v1/intelligence/ingestion/run
+# GET  /v1/intelligence/knowledge
+# GET  /v1/intelligence/knowledge/recent?category=health
+```
+
+Advisory reports automatically include `chemical_signals` and `health_signals` from the knowledge base.
+
 ## Architecture
 
 ```

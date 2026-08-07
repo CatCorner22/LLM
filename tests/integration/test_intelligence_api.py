@@ -29,3 +29,19 @@ def test_intelligence_benchmark_endpoint() -> None:
     response = client.get("/v1/intelligence/benchmark")
     assert response.status_code == 200
     assert "disruptive_advantages" in response.json()
+
+
+@pytest.mark.integration
+def test_intelligence_knowledge_endpoint() -> None:
+    pytest.importorskip("fastapi")
+    from fastapi.testclient import TestClient
+
+    from pioneer.serving.app import create_app
+
+    client = TestClient(create_app())
+    response = client.get("/v1/intelligence/knowledge?limit=5")
+    assert response.status_code == 200
+    payload = response.json()
+    assert "store" in payload
+    assert "recent_chemicals" in payload
+    assert "recent_health" in payload
