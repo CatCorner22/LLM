@@ -7,14 +7,14 @@ name = "pioneer-ml"
 version = "0.1.0"
 description = "Commercial-grade foundation for advanced LLM and ML applications"
 readme = "README.md"
-license = "Apache-2.0"
+license = { file = "LICENSE" }
 requires-python = ">=3.11"
 authors = [{ name = "Pioneer ML Team" }]
 keywords = ["llm", "machine-learning", "mlops", "rag", "agents"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: Apache Software License",
+    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -68,6 +68,8 @@ dev = [
     "pre-commit>=3.8,<5",
     "types-pyyaml>=6.0,<7",
     "types-requests>=2.32,<3",
+    "pip-licenses>=4.4,<6",
+    "pipdeptree>=2.16,<3",
 ]
 all = [
     "pioneer-ml[llm,training,rag,serve,observability,dev]",

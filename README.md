@@ -97,4 +97,13 @@ pre-commit install  # Git hooks
 
 ## License
 
-Apache-2.0
+Pioneer ML is released under the [MIT License](LICENSE).
+
+Third-party dependency licenses are documented in
+[licenses/THIRD_PARTY_LICENSES.md](licenses/THIRD_PARTY_LICENSES.md).
+See [docs/OPEN_SOURCE.md](docs/OPEN_SOURCE.md) for the open source policy.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md). By contributing, you agree to license
+your contributions under MIT.
