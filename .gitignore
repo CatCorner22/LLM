@@ -44,7 +44,7 @@ htmlcov/
 
 # Artifacts
 artifacts/
-data/
+/data/
 *.pt
 *.bin
 *.safetensors
