@@ -8,6 +8,11 @@ from pioneer.intelligence.benchmark.competitors import (
     IndustryAverageBaseline,
     ManualAssessmentBaseline,
 )
+from pioneer.intelligence.benchmark.huggingface import (
+    HFBenchmarkConfig,
+    HFBenchmarkReport,
+    HFBenchmarkRunner,
+)
 from pioneer.intelligence.benchmark.runner import BenchmarkMetric, BenchmarkReport, BenchmarkRunner
 
 __all__ = [
@@ -17,6 +22,9 @@ __all__ = [
     "BenchmarkRunner",
     "CompetitorBaseline",
     "CompetitorResult",
+    "HFBenchmarkConfig",
+    "HFBenchmarkReport",
+    "HFBenchmarkRunner",
     "HeuristicRulesBaseline",
     "IndustryAverageBaseline",
     "ManualAssessmentBaseline",

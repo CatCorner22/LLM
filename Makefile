@@ -57,3 +57,7 @@ license-check-all:
 	pip install -e ".[all]" -q
 	python3 scripts/check_licenses.py check || true
 	@echo "Review docs/OPEN_SOURCE.md for training/CUDA proprietary components."
+
+hf-benchmark:
+	pip install -e ".[huggingface]" -q
+	pioneer-hf-benchmark --mining-samples 500

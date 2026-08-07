@@ -8,6 +8,7 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 
 from pioneer.intelligence.advisory.advisor import BusinessAdvisor
+from pioneer.intelligence.benchmark.huggingface import HFBenchmarkReport
 from pioneer.intelligence.benchmark.runner import BenchmarkReport, BenchmarkRunner
 from pioneer.intelligence.risk.composite import CompositeRiskEngine
 from pioneer.intelligence.risk.models import AssetPortfolio, RiskAssessment
@@ -48,3 +49,10 @@ async def run_scenarios(request: PortfolioRequest) -> ScenarioRunResult:
 @router.get("/benchmark", response_model=BenchmarkReport)
 async def benchmark() -> BenchmarkReport:
     return BenchmarkRunner().run(sample_portfolio())
+
+
+@router.get("/hf-benchmark")
+async def hf_benchmark() -> HFBenchmarkReport:
+    from pioneer.intelligence.benchmark.huggingface import HFBenchmarkConfig, HFBenchmarkRunner
+
+    return HFBenchmarkRunner(HFBenchmarkConfig(mining_sample_size=200)).run()

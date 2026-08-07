@@ -56,6 +56,27 @@ Pioneer is measured against three legacy-style baselines:
 
 Benchmark metrics: risk discrimination, recommendation diversity, scenario coverage, response latency, accident model availability.
 
+### Hugging Face Hub benchmark
+
+Evaluate Pioneer on public HF datasets with `pioneer-hf-benchmark`:
+
+| Task | HF Dataset | Metric |
+|------|------------|--------|
+| Injury severity prediction | [electricsheepafrica/africa-synth-mining-safety-incidents-all](https://huggingface.co/datasets/electricsheepafrica/africa-synth-mining-safety-incidents-all) | F1 (high injury) |
+| Risk severity ranking | Same mining dataset | Spearman correlation |
+| Severity calibration | Fatal vs first-aid incidents | Score separation gap |
+| News risk relevance | Curated English headlines | F1 vs keyword baseline |
+
+```bash
+pip install -e ".[huggingface]"
+pioneer-hf-benchmark
+pioneer-hf-benchmark --mining-samples 1000 --json
+# Optional HF zero-shot model comparison:
+pioneer-hf-benchmark --with-hf-model --model facebook/bart-large-mnli
+```
+
+API: `GET /v1/intelligence/hf-benchmark`
+
 ## Architecture
 
 ```
