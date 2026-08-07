@@ -1,0 +1,17 @@
+{
+  "name": "Pioneer ML",
+  "install": "pip install -e \".[dev]\"",
+  "terminals": [
+    {
+      "name": "api",
+      "command": "PATH=\"$HOME/.local/bin:$PATH\" pioneer-serve",
+      "description": "Pioneer ML FastAPI server on http://0.0.0.0:8000 (GET /health, POST /v1/predict)."
+    }
+  ],
+  "ports": [
+    {
+      "name": "api",
+      "port": 8000
+    }
+  ]
+}
