@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 import pandas as pd
 
@@ -24,8 +24,8 @@ def load_jsonl(config: DatasetConfig) -> list[dict[str, Any]]:
 
     records: list[dict[str, Any]] = []
     with path.open(encoding="utf-8") as handle:
-        for line_number, line in enumerate(handle, start=1):
-            line = line.strip()
+        for line_number, raw_line in enumerate(handle, start=1):
+            line = raw_line.strip()
             if not line:
                 continue
             try:
