@@ -52,12 +52,15 @@ def test_governance_assessor_flags_sod_and_conduct() -> None:
 
 @pytest.mark.unit
 def test_relationship_map_focus_areas() -> None:
-    assessment = CompositeRiskEngine().assess(sample_portfolio())
-    rel_map = RelationshipMapBuilder().build(GOVERNANCE_KNOWLEDGE_SEEDS, assessment)
+    portfolio = sample_portfolio()
+    assessment = CompositeRiskEngine().assess(portfolio)
+    rel_map = RelationshipMapBuilder().build(GOVERNANCE_KNOWLEDGE_SEEDS, assessment, portfolio)
     assert rel_map.nodes
     assert rel_map.edges
     focus = rel_map.focus_areas
     assert "employee_conduct" in focus or "segregation_of_duties" in focus
+    assert "knowledge_acquisition" in focus
+    assert rel_map.acquisition_assessments
 
 
 @pytest.mark.unit

@@ -8,7 +8,12 @@ from pydantic import BaseModel, Field
 
 from pioneer.intelligence.advisory.recommendations import RecommendationCategory
 from pioneer.intelligence.ingestion.knowledge import KnowledgeCategory, KnowledgeRecord
-from pioneer.intelligence.risk.models import RiskAssessment, RiskCategory
+from pioneer.intelligence.relationships.acquisition import (
+    CompetencyAssessment,
+    ExpertiseLevel,
+    KnowledgeAcquisitionAssessor,
+)
+from pioneer.intelligence.risk.models import AssetPortfolio, RiskAssessment, RiskCategory
 
 
 class RelationshipType(StrEnum):
@@ -22,6 +27,7 @@ class RelationshipType(StrEnum):
 class ControlDomain(StrEnum):
     EMPLOYEE_CONDUCT = "employee_conduct"
     SEGREGATION_OF_DUTIES = "segregation_of_duties"
+    KNOWLEDGE_ACQUISITION = "knowledge_acquisition"
     SAFETY = "safety"
     COMPLIANCE = "compliance"
     OPERATIONS = "operations"
@@ -49,6 +55,7 @@ class KnowledgeRelationshipMap(BaseModel):
     nodes: list[MapNode] = Field(default_factory=list)
     edges: list[MapEdge] = Field(default_factory=list)
     focus_areas: list[str] = Field(default_factory=list)
+    acquisition_assessments: list[CompetencyAssessment] = Field(default_factory=list)
 
 
 KNOWLEDGE_TO_RISK: dict[KnowledgeCategory, list[RiskCategory]] = {
@@ -64,6 +71,11 @@ KNOWLEDGE_TO_RISK: dict[KnowledgeCategory, list[RiskCategory]] = {
     KnowledgeCategory.EMPLOYEE_CONDUCT: [RiskCategory.GOVERNANCE, RiskCategory.ACCIDENT],
     KnowledgeCategory.SEGREGATION_OF_DUTIES: [
         RiskCategory.GOVERNANCE,
+        RiskCategory.OPERATIONAL,
+    ],
+    KnowledgeCategory.KNOWLEDGE_ACQUISITION: [
+        RiskCategory.GOVERNANCE,
+        RiskCategory.ACCIDENT,
         RiskCategory.OPERATIONAL,
     ],
 }
@@ -82,6 +94,10 @@ KNOWLEDGE_TO_CONTROLS: dict[KnowledgeCategory, list[ControlDomain]] = {
         ControlDomain.SEGREGATION_OF_DUTIES,
         ControlDomain.FINANCIAL,
     ],
+    KnowledgeCategory.KNOWLEDGE_ACQUISITION: [
+        ControlDomain.KNOWLEDGE_ACQUISITION,
+        ControlDomain.EMPLOYEE_CONDUCT,
+    ],
 }
 
 CONTROL_TO_RECOMMENDATIONS: dict[ControlDomain, list[RecommendationCategory]] = {
@@ -92,6 +108,10 @@ CONTROL_TO_RECOMMENDATIONS: dict[ControlDomain, list[RecommendationCategory]] = 
     ControlDomain.SEGREGATION_OF_DUTIES: [
         RecommendationCategory.COMPLIANCE,
         RecommendationCategory.OPERATIONS,
+    ],
+    ControlDomain.KNOWLEDGE_ACQUISITION: [
+        RecommendationCategory.OPERATIONS,
+        RecommendationCategory.COMPLIANCE,
     ],
     ControlDomain.SAFETY: [RecommendationCategory.SAFETY],
     ControlDomain.COMPLIANCE: [RecommendationCategory.COMPLIANCE],
@@ -235,15 +255,73 @@ def _assessment_edges(
     return edges
 
 
+def _acquisition_edges(
+    assessment: CompetencyAssessment,
+    nodes: dict[str, MapNode],
+) -> list[MapEdge]:
+    node_id = f"acquisition:{assessment.subject_id}"
+    nodes[node_id] = MapNode(
+        id=node_id,
+        label=f"Competency ({assessment.expertise_level.value})",
+        node_type="acquisition_assessment",
+        category=assessment.expertise_level.value,
+    )
+    edges = [
+        MapEdge(
+            source=node_id,
+            target="knowledge:knowledge_acquisition",
+            relationship=RelationshipType.INFORMS,
+            weight=assessment.confidence,
+            rationale=assessment.summary,
+        ),
+        MapEdge(
+            source=node_id,
+            target="control:knowledge_acquisition",
+            relationship=RelationshipType.REQUIRES,
+            weight=assessment.rote_repetition_score,
+            rationale="Competency assessment drives acquisition controls",
+        ),
+    ]
+    if assessment.expertise_level == ExpertiseLevel.ROTE_REPETITION:
+        edges.append(
+            MapEdge(
+                source=node_id,
+                target="risk:governance",
+                relationship=RelationshipType.ELEVATES,
+                weight=assessment.rote_repetition_score,
+                rationale="Rote repetition elevates governance and operational risk",
+            )
+        )
+    elif assessment.expertise_level == ExpertiseLevel.EXPERT:
+        edges.append(
+            MapEdge(
+                source=node_id,
+                target="risk:accident",
+                relationship=RelationshipType.MITIGATES,
+                weight=assessment.expertise_score,
+                rationale="Verified expertise mitigates accident likelihood",
+            )
+        )
+    return edges
+
+
 class RelationshipMapBuilder:
     """Build a relationship map from knowledge records and a risk assessment."""
 
-    FOCUS_AREAS = ("employee_conduct", "segregation_of_duties")
+    FOCUS_AREAS = (
+        "employee_conduct",
+        "segregation_of_duties",
+        "knowledge_acquisition",
+    )
+
+    def __init__(self) -> None:
+        self.acquisition_assessor = KnowledgeAcquisitionAssessor()
 
     def build(
         self,
         records: list[KnowledgeRecord],
         assessment: RiskAssessment | None = None,
+        portfolio: AssetPortfolio | None = None,
     ) -> KnowledgeRelationshipMap:
         nodes = _catalog_nodes()
         edges = _catalog_edges()
@@ -251,16 +329,23 @@ class RelationshipMapBuilder:
         if assessment:
             edges.extend(_assessment_edges(assessment, nodes))
 
+        acquisition_assessments: list[CompetencyAssessment] = []
+        if portfolio and portfolio.competency:
+            competency_result = self.acquisition_assessor.assess(portfolio.competency)
+            acquisition_assessments.append(competency_result)
+            edges.extend(_acquisition_edges(competency_result, nodes))
+
         present_categories = {record.category for record in records}
         focus = [
             area
             for area in self.FOCUS_AREAS
-            if _focus_triggered(area, present_categories, assessment)
+            if _focus_triggered(area, present_categories, assessment, acquisition_assessments)
         ]
         return KnowledgeRelationshipMap(
             nodes=list(nodes.values()),
             edges=edges,
             focus_areas=focus,
+            acquisition_assessments=acquisition_assessments,
         )
 
 
@@ -275,13 +360,22 @@ def _focus_triggered(
     area: str,
     categories: set[KnowledgeCategory],
     assessment: RiskAssessment | None,
+    acquisition_assessments: list[CompetencyAssessment] | None = None,
 ) -> bool:
     if area == "employee_conduct":
-        if KnowledgeCategory.EMPLOYEE_CONDUCT in categories:
-            return True
-        return assessment is not None and _has_governance_factor(assessment, "conduct")
+        return KnowledgeCategory.EMPLOYEE_CONDUCT in categories or (
+            assessment is not None and _has_governance_factor(assessment, "conduct")
+        )
     if area == "segregation_of_duties":
-        if KnowledgeCategory.SEGREGATION_OF_DUTIES in categories:
+        return KnowledgeCategory.SEGREGATION_OF_DUTIES in categories or (
+            assessment is not None and _has_governance_factor(assessment, "segregation")
+        )
+    if area == "knowledge_acquisition":
+        if KnowledgeCategory.KNOWLEDGE_ACQUISITION in categories:
             return True
-        return assessment is not None and _has_governance_factor(assessment, "segregation")
+        if acquisition_assessments:
+            return any(
+                item.expertise_level in {ExpertiseLevel.ROTE_REPETITION, ExpertiseLevel.UNVERIFIED}
+                for item in acquisition_assessments
+            )
     return False

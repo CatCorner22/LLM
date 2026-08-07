@@ -23,6 +23,7 @@ class KnowledgeCategory(StrEnum):
     INDUSTRY = "industry"
     EMPLOYEE_CONDUCT = "employee_conduct"
     SEGREGATION_OF_DUTIES = "segregation_of_duties"
+    KNOWLEDGE_ACQUISITION = "knowledge_acquisition"
 
 
 class KnowledgeRecord(BaseModel):

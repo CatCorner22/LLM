@@ -8,6 +8,7 @@ from pioneer.intelligence.risk.infrastructure import InfrastructureRiskAssessor
 from pioneer.intelligence.risk.models import (
     AssetPortfolio,
     BuildingProfile,
+    CompetencyProfile,
     GovernanceProfile,
     OperationalProfile,
     PipeProfile,
@@ -24,6 +25,7 @@ __all__ = [
     "AssetPortfolio",
     "BuildingProfile",
     "BuildingRiskAssessor",
+    "CompetencyProfile",
     "CompositeRiskEngine",
     "GovernanceProfile",
     "GovernanceRiskAssessor",

@@ -3,6 +3,7 @@
 from pioneer.intelligence.risk.models import (
     AssetPortfolio,
     BuildingProfile,
+    CompetencyProfile,
     GovernanceProfile,
     OperationalProfile,
     PipeProfile,
@@ -68,5 +69,15 @@ def sample_portfolio() -> AssetPortfolio:
             sod_conflicts=2,
             role_overlap_ratio=0.28,
             dual_control_gaps=1,
+        ),
+        competency=CompetencyProfile(
+            asset_id="BLDG-001",
+            training_completion_rate=0.95,
+            scenario_transfer_score=0.42,
+            explanation_audit_score=0.38,
+            novel_condition_error_rate=0.48,
+            practical_demonstration_rate=0.35,
+            certification_only_ratio=0.72,
+            assessment_count=3,
         ),
     )

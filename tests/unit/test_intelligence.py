@@ -113,3 +113,25 @@ def test_advisor_includes_governance_signals() -> None:
     assert len(report.governance_signals) >= 2
     focus = report.relationship_map.get("focus_areas", [])
     assert "employee_conduct" in focus or "segregation_of_duties" in focus
+
+
+@pytest.mark.unit
+def test_advisor_includes_acquisition_signals() -> None:
+    from pioneer.intelligence.relationships.seeds import GOVERNANCE_KNOWLEDGE_SEEDS
+
+    portfolio = sample_portfolio()
+    report = BusinessAdvisor().generate_report(
+        portfolio,
+        knowledge_records=GOVERNANCE_KNOWLEDGE_SEEDS,
+        load_knowledge=False,
+        run_scenarios=False,
+    )
+    assert report.acquisition_signals
+    assert any("rote_repetition" in signal for signal in report.acquisition_signals)
+    assessments = report.relationship_map.get("acquisition_assessments", [])
+    assert assessments
+    assert "knowledge_acquisition" in report.relationship_map.get("focus_areas", [])
+    acquisition_recs = [
+        rec for rec in report.recommendations if "knowledge_acquisition" in rec.evidence_sources
+    ]
+    assert acquisition_recs

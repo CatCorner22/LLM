@@ -12,6 +12,7 @@ from pioneer.intelligence.advisory.recommendations import (
 from pioneer.intelligence.ingestion.feeds import FeedItem
 from pioneer.intelligence.ingestion.knowledge import KnowledgeCategory, KnowledgeRecord
 from pioneer.intelligence.ingestion.scheduler import KnowledgeStore
+from pioneer.intelligence.relationships.acquisition import CompetencyAssessment, ExpertiseLevel
 from pioneer.intelligence.relationships.map import RelationshipMapBuilder
 from pioneer.intelligence.risk.composite import CompositeRiskEngine
 from pioneer.intelligence.risk.models import AssetPortfolio, RiskAssessment, RiskCategory
@@ -172,6 +173,64 @@ class BusinessAdvisor:
 
         return recs
 
+    def _recommendations_from_acquisition(
+        self,
+        assessments: list[CompetencyAssessment],
+        start_id: int,
+    ) -> list[BusinessRecommendation]:
+        recs: list[BusinessRecommendation] = []
+        rec_id = start_id
+        for assessment in assessments:
+            if assessment.expertise_level == ExpertiseLevel.ROTE_REPETITION:
+                rec_id += 1
+                recs.append(
+                    BusinessRecommendation(
+                        id=f"rec_{rec_id}",
+                        title="Validate workforce understanding beyond training completion",
+                        description=(
+                            "High training completion with weak transfer and explanation "
+                            "scores indicates rote repetition without understanding. "
+                            + " ".join(assessment.recommended_actions)
+                        ),
+                        category=RecommendationCategory.OPERATIONS,
+                        priority=RecommendationPriority.IMMEDIATE
+                        if assessment.rote_repetition_score >= 0.45
+                        else RecommendationPriority.SHORT_TERM,
+                        estimated_cost_usd=2000.0,
+                        risk_reduction=min(0.3, assessment.rote_repetition_score * 0.5),
+                        rationale=[assessment.summary, *assessment.recommended_actions],
+                        evidence_sources=["knowledge_acquisition"],
+                    )
+                )
+            elif assessment.expertise_level == ExpertiseLevel.UNVERIFIED:
+                rec_id += 1
+                recs.append(
+                    BusinessRecommendation(
+                        id=f"rec_{rec_id}",
+                        title="Establish competency baselines before expert designation",
+                        description=(
+                            "Insufficient transfer, explanation, and practical demonstration "
+                            "data to verify expertise. " + " ".join(assessment.recommended_actions)
+                        ),
+                        category=RecommendationCategory.COMPLIANCE,
+                        priority=RecommendationPriority.SHORT_TERM,
+                        estimated_cost_usd=1500.0,
+                        risk_reduction=0.15,
+                        rationale=[assessment.summary],
+                        evidence_sources=["knowledge_acquisition"],
+                    )
+                )
+        return recs
+
+    def _acquisition_signals(self, assessments: list[CompetencyAssessment]) -> list[str]:
+        return [
+            (
+                f"[{item.subject_id}] {item.expertise_level.value}: {item.summary} "
+                f"(expertise={item.expertise_score:.2f}, rote={item.rote_repetition_score:.2f})"
+            )
+            for item in assessments
+        ]
+
     def _scenario_highlights(self, scenario_result: ScenarioRunResult) -> list[str]:
         return [
             f"{outcome.scenario_name}: {outcome.business_impact_summary}"
@@ -215,9 +274,15 @@ class BusinessAdvisor:
             records = store.load_all_knowledge(limit=50)
         records = records or []
 
-        relationship_map = RelationshipMapBuilder().build(records, assessment)
+        relationship_map = RelationshipMapBuilder().build(records, assessment, portfolio)
 
         recommendations = self._recommendations_from_assessment(assessment)
+        recommendations.extend(
+            self._recommendations_from_acquisition(
+                relationship_map.acquisition_assessments,
+                len(recommendations),
+            )
+        )
 
         if scenario_result and scenario_result.outcomes:
             worst = scenario_result.outcomes[0]
@@ -269,6 +334,7 @@ class BusinessAdvisor:
             chemical_signals=self._knowledge_signals(records, KnowledgeCategory.CHEMICAL),
             health_signals=self._knowledge_signals(records, KnowledgeCategory.HEALTH),
             governance_signals=self._governance_signals(records),
+            acquisition_signals=self._acquisition_signals(relationship_map.acquisition_assessments),
             relationship_map=relationship_map.model_dump(),
         )
 

@@ -75,4 +75,52 @@ GOVERNANCE_KNOWLEDGE_SEEDS: list[KnowledgeRecord] = [
         metadata={"review_cadence": "quarterly", "control_type": "segregation_of_duties"},
         url="",
     ),
+    KnowledgeRecord(
+        id="gov:acquisition:1",
+        source_type=KnowledgeSourceType.EPA_TRI,
+        source_id="pioneer_governance",
+        title="Scenario-transfer test for true expertise",
+        summary=(
+            "Experts adapt when conditions change; rote learners fail novel scenarios. "
+            "Use transfer drills, not completion metrics alone, to validate understanding."
+        ),
+        category=KnowledgeCategory.KNOWLEDGE_ACQUISITION,
+        published_at=datetime(2026, 1, 1, tzinfo=UTC),
+        relevance_score=0.88,
+        keywords=["transfer", "expertise", "novel_conditions", "assessment"],
+        metadata={"method": "scenario_transfer", "control_type": "knowledge_acquisition"},
+        url="",
+    ),
+    KnowledgeRecord(
+        id="gov:acquisition:2",
+        source_type=KnowledgeSourceType.EPA_TRI,
+        source_id="pioneer_governance",
+        title="Explain-your-reasoning audits vs checklist repetition",
+        summary=(
+            "Require workers to articulate why a step applies, not only that it appears "
+            "on a checklist. Low explanation scores with high completion indicate rote repetition."
+        ),
+        category=KnowledgeCategory.KNOWLEDGE_ACQUISITION,
+        published_at=datetime(2026, 1, 1, tzinfo=UTC),
+        relevance_score=0.86,
+        keywords=["explanation_audit", "checklist", "understanding", "rote"],
+        metadata={"method": "explanation_audit", "control_type": "knowledge_acquisition"},
+        url="",
+    ),
+    KnowledgeRecord(
+        id="gov:acquisition:3",
+        source_type=KnowledgeSourceType.EPA_TRI,
+        source_id="pioneer_governance",
+        title="Certification paired with practical demonstration",
+        summary=(
+            "Paper certifications without observed performance overstate capability. "
+            "Pair every credential with a practical demonstration under realistic conditions."
+        ),
+        category=KnowledgeCategory.KNOWLEDGE_ACQUISITION,
+        published_at=datetime(2026, 1, 1, tzinfo=UTC),
+        relevance_score=0.84,
+        keywords=["certification", "practical_demo", "competency", "verification"],
+        metadata={"method": "practical_demonstration", "control_type": "knowledge_acquisition"},
+        url="",
+    ),
 ]

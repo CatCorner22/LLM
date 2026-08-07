@@ -101,6 +101,19 @@ class GovernanceProfile(BaseModel):
     dual_control_gaps: int = Field(default=0, ge=0)
 
 
+class CompetencyProfile(BaseModel):
+    """Signals to distinguish expertise from rote repetition."""
+
+    asset_id: str
+    training_completion_rate: float = Field(default=0.9, ge=0.0, le=1.0)
+    scenario_transfer_score: float = Field(default=0.7, ge=0.0, le=1.0)
+    explanation_audit_score: float = Field(default=0.7, ge=0.0, le=1.0)
+    novel_condition_error_rate: float = Field(default=0.15, ge=0.0, le=1.0)
+    practical_demonstration_rate: float = Field(default=0.75, ge=0.0, le=1.0)
+    certification_only_ratio: float = Field(default=0.2, ge=0.0, le=1.0)
+    assessment_count: int = Field(default=1, ge=0)
+
+
 class AssetPortfolio(BaseModel):
     """Full asset context for composite risk scoring."""
 
@@ -109,6 +122,7 @@ class AssetPortfolio(BaseModel):
     weather: WeatherProfile | None = None
     operational: OperationalProfile | None = None
     governance: GovernanceProfile | None = None
+    competency: CompetencyProfile | None = None
 
 
 def logistic_probability(features: np.ndarray, weights: np.ndarray, bias: float) -> float:

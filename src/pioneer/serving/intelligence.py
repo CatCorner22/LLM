@@ -108,4 +108,5 @@ async def relationship_map() -> KnowledgeRelationshipMap:
     store.seed_governance_knowledge()
     records = store.load_all_knowledge(limit=100)
     assessment = CompositeRiskEngine().assess(sample_portfolio())
-    return RelationshipMapBuilder().build(records, assessment)
+    portfolio = sample_portfolio()
+    return RelationshipMapBuilder().build(records, assessment, portfolio)
