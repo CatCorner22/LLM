@@ -87,6 +87,24 @@ make coverage       # Coverage report (80% threshold)
 pre-commit install  # Git hooks
 ```
 
+## Research-grounded techniques
+
+Several modules implement well-established methods from the literature:
+
+| Area | Technique | Reference |
+|------|-----------|-----------|
+| RAG | Reciprocal Rank Fusion (hybrid lexical + dense) | Cormack et al., SIGIR 2009 |
+| RAG | Maximal Marginal Relevance (diversity reranking) | Carbonell & Goldstein, SIGIR 1998 |
+| RAG | Hypothetical Document Embeddings (HyDE) | Gao et al., [arXiv:2212.10496](https://huggingface.co/papers/2212.10496) |
+| Agents | ReAct (interleaved reasoning + acting) | Yao et al., [arXiv:2210.03629](https://huggingface.co/papers/2210.03629) |
+| Agents | Self-consistency (majority-vote decoding) | Wang et al., [arXiv:2203.11171](https://huggingface.co/papers/2203.11171) |
+| Evaluation | SQuAD answer normalization + token F1 | Rajpurkar et al., [arXiv:1606.05250](https://huggingface.co/papers/1606.05250) |
+| Evaluation | `pass@k` unbiased estimator | Chen et al., [arXiv:2107.03374](https://huggingface.co/papers/2107.03374) |
+
+Retrieval strategy, RRF/MMR, and HyDE are toggled through `RAGConfig`; SQuAD-style
+metrics are available as `squad_em` and `squad_f1`; agents expose
+`Agent.run_self_consistent(...)`.
+
 ## Design Principles
 
 - **Typed & validated** — Pydantic settings, strict mypy, structured errors
