@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field
 from pioneer.__version__ import __version__
 from pioneer.core.config import get_settings
 from pioneer.core.logging import configure_logging, get_logger
+from pioneer.serving.intelligence import router as intelligence_router
 
 logger = get_logger(__name__)
 
@@ -28,9 +29,6 @@ class PredictRequest(BaseModel):
 class PredictResponse(BaseModel):
     output: str
     metadata: dict[str, Any] = Field(default_factory=dict)
-
-
-from pioneer.serving.intelligence import router as intelligence_router
 
 
 def create_app() -> FastAPI:

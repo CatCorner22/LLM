@@ -99,9 +99,7 @@ class CDCEmergencyVisitIngester:
         logger.info("cdc_er_visits_ingested", count=len(records))
         return records
 
-    async def _fetch_json(
-        self, url: str, params: dict[str, str | int]
-    ) -> list[dict[str, Any]]:
+    async def _fetch_json(self, url: str, params: dict[str, str | int]) -> list[dict[str, Any]]:
         try:
             async with httpx.AsyncClient(timeout=self.timeout_seconds) as client:
                 response = await client.get(url, params=params, follow_redirects=True)

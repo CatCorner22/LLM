@@ -45,3 +45,22 @@ def test_intelligence_knowledge_endpoint() -> None:
     assert "store" in payload
     assert "recent_chemicals" in payload
     assert "recent_health" in payload
+    assert "recent_governance" in payload
+
+
+@pytest.mark.integration
+def test_intelligence_relationship_map_endpoint() -> None:
+    pytest.importorskip("fastapi")
+    from fastapi.testclient import TestClient
+
+    from pioneer.serving.app import create_app
+
+    client = TestClient(create_app())
+    response = client.get("/v1/intelligence/relationship-map")
+    assert response.status_code == 200
+    payload = response.json()
+    assert "nodes" in payload
+    assert "edges" in payload
+    assert "focus_areas" in payload
+    focus = payload["focus_areas"]
+    assert "employee_conduct" in focus or "segregation_of_duties" in focus

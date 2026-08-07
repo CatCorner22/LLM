@@ -37,9 +37,7 @@ class AccidentLikelihoodModel:
         incident_norm = 0.0
 
         if portfolio.building:
-            building_age_norm = min(
-                1.0, (2026 - portfolio.building.year_built) / 100.0
-            )
+            building_age_norm = min(1.0, (2026 - portfolio.building.year_built) / 100.0)
             structural_risk = 1.0 - portfolio.building.structural_condition
 
         if portfolio.weather:
@@ -80,9 +78,7 @@ class AccidentLikelihoodModel:
     ) -> RiskAssessment:
         op = operational or portfolio.operational
         features = self._feature_vector(portfolio, op)
-        accident_prob = logistic_probability(
-            features, self.ACCIDENT_WEIGHTS, self.ACCIDENT_BIAS
-        )
+        accident_prob = logistic_probability(features, self.ACCIDENT_WEIGHTS, self.ACCIDENT_BIAS)
         injury_prob = logistic_probability(features, self.INJURY_WEIGHTS, self.INJURY_BIAS)
 
         factors = [

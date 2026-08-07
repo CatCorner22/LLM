@@ -17,7 +17,6 @@ from pioneer.intelligence.ingestion.public_data import (
 )
 from pioneer.intelligence.ingestion.scheduler import IngestionConfig, IngestionScheduler
 
-
 EPA_SAMPLE = [
     {
         "tri_chem_id": "0000050000",
@@ -54,9 +53,7 @@ class MockEPAChemicalIngester(EPAChemicalIngester):
 
 
 class MockCDCEmergencyVisitIngester(CDCEmergencyVisitIngester):
-    async def _fetch_json(
-        self, url: str, params: dict[str, str | int]
-    ) -> list[dict[str, Any]]:
+    async def _fetch_json(self, url: str, params: dict[str, str | int]) -> list[dict[str, Any]]:
         return CDC_SAMPLE
 
 

@@ -44,3 +44,5 @@ class AdvisoryReport(BaseModel):
     news_signals: list[str] = Field(default_factory=list)
     chemical_signals: list[str] = Field(default_factory=list)
     health_signals: list[str] = Field(default_factory=list)
+    governance_signals: list[str] = Field(default_factory=list)
+    relationship_map: dict[str, object] = Field(default_factory=dict)

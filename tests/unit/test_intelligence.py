@@ -1,12 +1,13 @@
 """Unit tests for scenario runner and advisory."""
 
+from datetime import UTC, datetime
+
 import pytest
 
 from pioneer.intelligence.advisory.advisor import BusinessAdvisor
-from pioneer.intelligence.ingestion.feeds import FeedItem, FeedCategory
+from pioneer.intelligence.ingestion.feeds import FeedCategory, FeedItem
 from pioneer.intelligence.samples import sample_portfolio
 from pioneer.intelligence.scenarios.runner import AutonomousScenarioRunner
-from datetime import UTC, datetime
 
 
 @pytest.mark.unit
@@ -94,3 +95,21 @@ def test_advisor_includes_knowledge_signals() -> None:
     )
     assert len(report.chemical_signals) == 1
     assert len(report.health_signals) == 1
+    assert report.relationship_map
+    assert "nodes" in report.relationship_map
+
+
+@pytest.mark.unit
+def test_advisor_includes_governance_signals() -> None:
+    from pioneer.intelligence.relationships.seeds import GOVERNANCE_KNOWLEDGE_SEEDS
+
+    portfolio = sample_portfolio()
+    report = BusinessAdvisor().generate_report(
+        portfolio,
+        knowledge_records=GOVERNANCE_KNOWLEDGE_SEEDS,
+        load_knowledge=False,
+        run_scenarios=False,
+    )
+    assert len(report.governance_signals) >= 2
+    focus = report.relationship_map.get("focus_areas", [])
+    assert "employee_conduct" in focus or "segregation_of_duties" in focus

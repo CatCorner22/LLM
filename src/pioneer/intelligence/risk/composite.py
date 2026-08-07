@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pioneer.intelligence.risk.accident import AccidentLikelihoodModel
 from pioneer.intelligence.risk.building import BuildingRiskAssessor
+from pioneer.intelligence.risk.governance import GovernanceRiskAssessor
 from pioneer.intelligence.risk.infrastructure import InfrastructureRiskAssessor
 from pioneer.intelligence.risk.models import (
     AssetPortfolio,
@@ -19,10 +20,11 @@ class CompositeRiskEngine:
     """Orchestrate building, weather, infrastructure, and accident risk models."""
 
     CATEGORY_WEIGHTS: dict[RiskCategory, float] = {
-        RiskCategory.BUILDING: 0.25,
-        RiskCategory.WEATHER: 0.2,
-        RiskCategory.INFRASTRUCTURE: 0.25,
-        RiskCategory.ACCIDENT: 0.3,
+        RiskCategory.BUILDING: 0.22,
+        RiskCategory.WEATHER: 0.18,
+        RiskCategory.INFRASTRUCTURE: 0.22,
+        RiskCategory.ACCIDENT: 0.28,
+        RiskCategory.GOVERNANCE: 0.1,
     }
 
     def __init__(self) -> None:
@@ -30,6 +32,7 @@ class CompositeRiskEngine:
         self.weather = WeatherRiskAssessor()
         self.infrastructure = InfrastructureRiskAssessor()
         self.accident = AccidentLikelihoodModel()
+        self.governance = GovernanceRiskAssessor()
 
     def assess(self, portfolio: AssetPortfolio) -> RiskAssessment:
         partials: list[RiskAssessment] = []
@@ -43,6 +46,9 @@ class CompositeRiskEngine:
             partials.append(pipe_assessment)
         accident_assessment = self.accident.predict(portfolio)
         partials.append(accident_assessment)
+        governance_assessment = self.governance.assess(portfolio)
+        if governance_assessment:
+            partials.append(governance_assessment)
 
         all_factors: list[RiskFactor] = []
         category_scores: dict[RiskCategory, list[float]] = {}

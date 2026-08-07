@@ -124,9 +124,7 @@ class BenchmarkRunner:
 
         wins = sum(1 for m in metrics if m.pioneer_wins)
         ranked = sorted(all_results, key=lambda r: r.overall_score, reverse=True)
-        pioneer_rank = next(
-            i + 1 for i, r in enumerate(ranked) if r.name == pioneer.name
-        )
+        pioneer_rank = next(i + 1 for i, r in enumerate(ranked) if r.name == pioneer.name)
 
         advantages = [
             "Autonomous multi-scenario stress testing (6+ scenarios per run)",

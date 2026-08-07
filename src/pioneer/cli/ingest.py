@@ -47,6 +47,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Stored feeds:      {summary['stored_feeds']}")
         print(f"Stored chemicals:  {summary['stored_chemicals']}")
         print(f"Stored ER visits:  {summary['stored_er_visits']}")
+        print(f"Stored governance: {summary.get('stored_governance', 0)}")
         print(f"Pruned records:    {summary['pruned']}")
         print("\nStore totals:")
         for key, value in stats.items():

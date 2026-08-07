@@ -22,6 +22,7 @@ class RiskCategory(StrEnum):
     INFRASTRUCTURE = "infrastructure"
     ACCIDENT = "accident"
     OPERATIONAL = "operational"
+    GOVERNANCE = "governance"
 
 
 class RiskFactor(BaseModel):
@@ -88,6 +89,18 @@ class OperationalProfile(BaseModel):
     night_shift_ratio: float = Field(default=0.2, ge=0.0, le=1.0)
 
 
+class GovernanceProfile(BaseModel):
+    """Employee conduct and segregation-of-duties indicators."""
+
+    asset_id: str
+    conduct_incidents_12m: int = Field(default=0, ge=0)
+    policy_training_completion: float = Field(default=0.95, ge=0.0, le=1.0)
+    whistleblower_channel: bool = True
+    sod_conflicts: int = Field(default=0, ge=0)
+    role_overlap_ratio: float = Field(default=0.1, ge=0.0, le=1.0)
+    dual_control_gaps: int = Field(default=0, ge=0)
+
+
 class AssetPortfolio(BaseModel):
     """Full asset context for composite risk scoring."""
 
@@ -95,6 +108,7 @@ class AssetPortfolio(BaseModel):
     pipes: list[PipeProfile] = Field(default_factory=list)
     weather: WeatherProfile | None = None
     operational: OperationalProfile | None = None
+    governance: GovernanceProfile | None = None
 
 
 def logistic_probability(features: np.ndarray, weights: np.ndarray, bias: float) -> float:

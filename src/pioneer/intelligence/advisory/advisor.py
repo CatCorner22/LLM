@@ -12,6 +12,7 @@ from pioneer.intelligence.advisory.recommendations import (
 from pioneer.intelligence.ingestion.feeds import FeedItem
 from pioneer.intelligence.ingestion.knowledge import KnowledgeCategory, KnowledgeRecord
 from pioneer.intelligence.ingestion.scheduler import KnowledgeStore
+from pioneer.intelligence.relationships.map import RelationshipMapBuilder
 from pioneer.intelligence.risk.composite import CompositeRiskEngine
 from pioneer.intelligence.risk.models import AssetPortfolio, RiskAssessment, RiskCategory
 from pioneer.intelligence.scenarios.runner import AutonomousScenarioRunner, ScenarioRunResult
@@ -109,6 +110,45 @@ class BusinessAdvisor:
                         rationale=[factor.description],
                     )
                 )
+            elif factor.category == RiskCategory.GOVERNANCE:
+                if "conduct" in factor.name:
+                    recs.append(
+                        BusinessRecommendation(
+                            id=f"rec_{rec_id}",
+                            title="Strengthen employee conduct program",
+                            description=(
+                                "Increase policy attestation, refresh code-of-conduct training, "
+                                "and review open conduct incidents with HR and legal."
+                            ),
+                            category=RecommendationCategory.COMPLIANCE,
+                            priority=RecommendationPriority.IMMEDIATE
+                            if factor.score >= 0.55
+                            else RecommendationPriority.SHORT_TERM,
+                            estimated_cost_usd=1500.0,
+                            risk_reduction=min(0.3, factor.score * 0.4),
+                            rationale=[factor.description, *factor.evidence],
+                            evidence_sources=["employee_conduct"],
+                        )
+                    )
+                elif "segregation" in factor.name:
+                    recs.append(
+                        BusinessRecommendation(
+                            id=f"rec_{rec_id}",
+                            title="Remediate segregation-of-duties conflicts",
+                            description=(
+                                "Split conflicting roles, enforce maker-checker on approvals, "
+                                "and close dual-control gaps on financial and safety workflows."
+                            ),
+                            category=RecommendationCategory.COMPLIANCE,
+                            priority=RecommendationPriority.IMMEDIATE
+                            if factor.score >= 0.5
+                            else RecommendationPriority.STRATEGIC,
+                            estimated_cost_usd=4000.0,
+                            risk_reduction=min(0.35, factor.score * 0.45),
+                            rationale=[factor.description, *factor.evidence],
+                            evidence_sources=["segregation_of_duties"],
+                        )
+                    )
 
         if assessment.accident_probability and assessment.accident_probability > 0.15:
             rec_id += 1
@@ -170,8 +210,12 @@ class BusinessAdvisor:
 
         records = knowledge_records
         if records is None and load_knowledge:
-            records = KnowledgeStore().load_all_knowledge(limit=50)
+            store = KnowledgeStore()
+            store.seed_governance_knowledge()
+            records = store.load_all_knowledge(limit=50)
         records = records or []
+
+        relationship_map = RelationshipMapBuilder().build(records, assessment)
 
         recommendations = self._recommendations_from_assessment(assessment)
 
@@ -204,7 +248,7 @@ class BusinessAdvisor:
         summary = (
             f"Overall risk score {assessment.overall_score:.2f} ({assessment.severity.value}). "
             f"{len(recommendations)} actionable recommendations identified across safety, "
-            "maintenance, operations, and insurance."
+            "maintenance, operations, governance, and insurance."
         )
 
         logger.info(
@@ -224,4 +268,11 @@ class BusinessAdvisor:
             news_signals=self._news_signals(feed_items or []),
             chemical_signals=self._knowledge_signals(records, KnowledgeCategory.CHEMICAL),
             health_signals=self._knowledge_signals(records, KnowledgeCategory.HEALTH),
+            governance_signals=self._governance_signals(records),
+            relationship_map=relationship_map.model_dump(),
         )
+
+    def _governance_signals(self, records: list[KnowledgeRecord]) -> list[str]:
+        conduct = self._knowledge_signals(records, KnowledgeCategory.EMPLOYEE_CONDUCT, limit=3)
+        sod = self._knowledge_signals(records, KnowledgeCategory.SEGREGATION_OF_DUTIES, limit=3)
+        return conduct + sod

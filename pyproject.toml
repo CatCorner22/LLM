@@ -105,6 +105,7 @@ packages = ["src/pioneer"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["."]
 asyncio_mode = "auto"
 addopts = "-ra --strict-markers --cov=pioneer --cov-report=term-missing"
 markers = [
@@ -139,10 +140,12 @@ ignore = ["PLR0913", "PLR2004", "TC001", "TC003", "PLW0108", "UP042", "B024"]
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["PLC0415", "ARG002", "TC003"]
 "src/pioneer/cli/serve.py" = ["PLC0415"]
+"src/pioneer/observability/telemetry.py" = ["PLC0415"]
 "src/pioneer/inference/engine.py" = ["PLC0415"]
 "src/pioneer/intelligence/benchmark/competitors.py" = ["PLC0415", "ARG002"]
 "src/pioneer/intelligence/benchmark/huggingface.py" = ["PLC0415"]
 "src/pioneer/intelligence/ingestion/public_data.py" = ["PLC0415"]
+"src/pioneer/intelligence/ingestion/scheduler.py" = ["PLC0415"]
 "src/pioneer/intelligence/ingestion/feeds.py" = ["ICN001", "DTZ007"]
 "src/pioneer/intelligence/risk/composite.py" = ["RUF012"]
 

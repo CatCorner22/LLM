@@ -3,10 +3,12 @@
 from pioneer.intelligence.risk.accident import AccidentLikelihoodModel
 from pioneer.intelligence.risk.building import BuildingRiskAssessor
 from pioneer.intelligence.risk.composite import CompositeRiskEngine
+from pioneer.intelligence.risk.governance import GovernanceRiskAssessor
 from pioneer.intelligence.risk.infrastructure import InfrastructureRiskAssessor
 from pioneer.intelligence.risk.models import (
     AssetPortfolio,
     BuildingProfile,
+    GovernanceProfile,
     OperationalProfile,
     PipeProfile,
     RiskAssessment,
@@ -23,6 +25,8 @@ __all__ = [
     "BuildingProfile",
     "BuildingRiskAssessor",
     "CompositeRiskEngine",
+    "GovernanceProfile",
+    "GovernanceRiskAssessor",
     "InfrastructureRiskAssessor",
     "OperationalProfile",
     "PipeProfile",

@@ -16,7 +16,6 @@ from pioneer.intelligence.ingestion.knowledge import (
 )
 from pioneer.intelligence.ingestion.scheduler import IngestionConfig, KnowledgeStore
 
-
 SAMPLE_CHEMICAL: dict[str, Any] = {
     "tri_chem_id": "0000050000",
     "chem_name": "Formaldehyde",

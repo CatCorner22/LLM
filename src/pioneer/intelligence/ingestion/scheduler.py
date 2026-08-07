@@ -60,7 +60,15 @@ class KnowledgeStore:
         self.knowledge_path = root / "knowledge_base.jsonl"
         self.chemical_path = root / "chemical_inventory.jsonl"
         self.health_path = root / "cdc_er_visits.jsonl"
-        for store_path in (self.path, self.knowledge_path, self.chemical_path, self.health_path):
+        self.governance_path = root / "governance_knowledge.jsonl"
+        store_paths = (
+            self.path,
+            self.knowledge_path,
+            self.chemical_path,
+            self.health_path,
+            self.governance_path,
+        )
+        for store_path in store_paths:
             store_path.parent.mkdir(parents=True, exist_ok=True)
 
     def append(self, items: list[FeedItem]) -> int:
@@ -81,17 +89,18 @@ class KnowledgeStore:
                 handle.write(record.model_dump_json() + "\n")
         return len(records)
 
-    def _path_for_category(
-        self, category: str | None, records: list[KnowledgeRecord]
-    ) -> Path:
+    def _path_for_category(self, category: str | None, records: list[KnowledgeRecord]) -> Path:
         if category == "chemical" or (
             records and records[0].category == KnowledgeCategory.CHEMICAL
         ):
             return self.chemical_path
-        if category == "health" or (
-            records and records[0].category == KnowledgeCategory.HEALTH
-        ):
+        if category == "health" or (records and records[0].category == KnowledgeCategory.HEALTH):
             return self.health_path
+        if records and records[0].category in (
+            KnowledgeCategory.EMPLOYEE_CONDUCT,
+            KnowledgeCategory.SEGREGATION_OF_DUTIES,
+        ):
+            return self.governance_path
         return self.knowledge_path
 
     def load_recent(self, limit: int = 100) -> list[FeedItem]:
@@ -111,15 +120,22 @@ class KnowledgeStore:
             source_path = self.chemical_path
         elif category == KnowledgeCategory.HEALTH and self.health_path.exists():
             source_path = self.health_path
+        elif (
+            category
+            in (
+                KnowledgeCategory.EMPLOYEE_CONDUCT,
+                KnowledgeCategory.SEGREGATION_OF_DUTIES,
+            )
+            and self.governance_path.exists()
+        ):
+            source_path = self.governance_path
         elif self.knowledge_path.exists():
             source_path = self.knowledge_path
         else:
             return []
 
         lines = source_path.read_text(encoding="utf-8").strip().splitlines()
-        records = [
-            KnowledgeRecord.model_validate(json.loads(line)) for line in lines[-limit * 2 :]
-        ]
+        records = [KnowledgeRecord.model_validate(json.loads(line)) for line in lines[-limit * 2 :]]
         if category is not None:
             records = [record for record in records if record.category == category]
         records.sort(key=lambda record: record.relevance_score, reverse=True)
@@ -127,7 +143,12 @@ class KnowledgeStore:
 
     def load_all_knowledge(self, limit: int = 100) -> list[KnowledgeRecord]:
         combined: list[KnowledgeRecord] = []
-        for path in (self.knowledge_path, self.chemical_path, self.health_path):
+        for path in (
+            self.knowledge_path,
+            self.chemical_path,
+            self.health_path,
+            self.governance_path,
+        ):
             if not path.exists():
                 continue
             for line in path.read_text(encoding="utf-8").splitlines():
@@ -181,7 +202,16 @@ class KnowledgeStore:
             "knowledge_records": self._count_lines(self.knowledge_path),
             "chemical_inventory": self._count_lines(self.chemical_path),
             "cdc_er_visits": self._count_lines(self.health_path),
+            "governance_knowledge": self._count_lines(self.governance_path),
         }
+
+    def seed_governance_knowledge(self) -> int:
+        """Load curated employee conduct and SoD knowledge if store is empty."""
+        from pioneer.intelligence.relationships.seeds import GOVERNANCE_KNOWLEDGE_SEEDS
+
+        if self._count_lines(self.governance_path) > 0:
+            return 0
+        return self.append_knowledge(GOVERNANCE_KNOWLEDGE_SEEDS)
 
     @staticmethod
     def _count_lines(path: Path) -> int:
@@ -236,6 +266,8 @@ class IngestionScheduler:
             ]
             stored_er = self.store.append_knowledge(relevant_er)
 
+        stored_governance = self.store.seed_governance_knowledge()
+
         removed = self.store.prune(self.config.retention_days)
         logger.info(
             "ingestion_complete",
@@ -243,6 +275,7 @@ class IngestionScheduler:
             stored_feeds=stored_feeds,
             stored_chemicals=stored_chemicals,
             stored_er_visits=stored_er,
+            stored_governance=stored_governance,
             pruned=removed,
         )
         return {
@@ -250,5 +283,6 @@ class IngestionScheduler:
             "stored_feeds": stored_feeds,
             "stored_chemicals": stored_chemicals,
             "stored_er_visits": stored_er,
+            "stored_governance": stored_governance,
             "pruned": removed,
         }

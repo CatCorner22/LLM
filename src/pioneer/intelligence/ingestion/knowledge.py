@@ -21,6 +21,8 @@ class KnowledgeCategory(StrEnum):
     HEALTH = "health"
     REGULATORY = "regulatory"
     INDUSTRY = "industry"
+    EMPLOYEE_CONDUCT = "employee_conduct"
+    SEGREGATION_OF_DUTIES = "segregation_of_duties"
 
 
 class KnowledgeRecord(BaseModel):
@@ -155,8 +157,7 @@ def er_visit_record_from_row(row: dict[str, Any], index: int) -> KnowledgeRecord
         estimate_label = str(estimate)
 
     summary = (
-        f"{estimate_label} ({subgroup}) in {year}"
-        f" | measure: {row.get('measure_type', 'ED visits')}"
+        f"{estimate_label} ({subgroup}) in {year} | measure: {row.get('measure_type', 'ED visits')}"
     )
     if row.get("lower_95_ci") and row.get("upper_95_ci"):
         summary += f" | 95% CI {row['lower_95_ci']}-{row['upper_95_ci']}"

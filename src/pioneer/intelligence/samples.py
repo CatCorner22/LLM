@@ -3,6 +3,7 @@
 from pioneer.intelligence.risk.models import (
     AssetPortfolio,
     BuildingProfile,
+    GovernanceProfile,
     OperationalProfile,
     PipeProfile,
     WeatherProfile,
@@ -58,5 +59,14 @@ def sample_portfolio() -> AssetPortfolio:
             prior_incidents_12m=2,
             maintenance_backlog_days=22.0,
             night_shift_ratio=0.25,
+        ),
+        governance=GovernanceProfile(
+            asset_id="BLDG-001",
+            conduct_incidents_12m=1,
+            policy_training_completion=0.82,
+            whistleblower_channel=True,
+            sod_conflicts=2,
+            role_overlap_ratio=0.28,
+            dual_control_gaps=1,
         ),
     )

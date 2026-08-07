@@ -59,9 +59,7 @@ class AutonomousScenarioRunner:
             elif param.name == "heat_wave_days_forecast" and stressed.weather:
                 stressed.weather.heat_wave_days_forecast += int(param.delta)
             elif param.name == "occupancy_multiplier" and stressed.building:
-                stressed.building.occupancy = int(
-                    stressed.building.occupancy * param.delta
-                )
+                stressed.building.occupancy = int(stressed.building.occupancy * param.delta)
             elif param.name == "maintenance_backlog_days" and stressed.operational:
                 stressed.operational.maintenance_backlog_days += param.delta
             elif param.name == "pipe_failure_multiplier" and stressed.pipes:
@@ -133,9 +131,7 @@ class AutonomousScenarioRunner:
             highest_risk_scenario=highest,
         )
 
-    def run_autonomous_suite(
-        self, portfolio: AssetPortfolio, count: int = 6
-    ) -> ScenarioRunResult:
+    def run_autonomous_suite(self, portfolio: AssetPortfolio, count: int = 6) -> ScenarioRunResult:
         """Run the full default scenario battery sorted by likelihood."""
         ranked = sorted(DEFAULT_SCENARIOS, key=lambda s: s.probability, reverse=True)
         return self.run(portfolio, scenarios=ranked[:count])
