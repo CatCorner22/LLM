@@ -10,8 +10,10 @@ from pioneer.intelligence.benchmark.hf_datasets import NEWS_RISK_BENCHMARK
 from pioneer.intelligence.benchmark.huggingface import (
     HFBenchmarkConfig,
     HFBenchmarkRunner,
+    _average_ranks,
     _binary_metrics,
     _incident_to_portfolio,
+    _spearman_corr,
 )
 
 SAMPLE_INCIDENTS: list[dict[str, Any]] = [
@@ -75,6 +77,16 @@ def test_hf_news_relevance_task() -> None:
     result = runner.benchmark_news_relevance()
     assert result.samples == len(NEWS_RISK_BENCHMARK)
     assert result.pioneer_score >= result.baseline_score
+    assert "hf_datasets.py" in result.dataset_url
+
+
+@pytest.mark.unit
+def test_spearman_corr_monotonic() -> None:
+    assert _spearman_corr([1.0, 2.0, 3.0, 4.0], [10.0, 20.0, 30.0, 40.0]) == pytest.approx(1.0)
+    assert _spearman_corr([1.0, 2.0, 3.0, 4.0], [40.0, 30.0, 20.0, 10.0]) == pytest.approx(-1.0)
+    ranks = _average_ranks([1.0, 1.0, 2.0])
+    assert ranks[0] == ranks[1]
+    assert ranks[2] > ranks[0]
 
 
 @pytest.mark.unit

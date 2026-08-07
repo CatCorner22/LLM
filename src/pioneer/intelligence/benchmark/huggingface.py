@@ -87,6 +87,31 @@ def _binary_metrics(
     return {"accuracy": accuracy, "f1": f1, "auc": auc, "precision": precision, "recall": recall}
 
 
+def _average_ranks(values: list[float]) -> np.ndarray:
+    """Assign average ranks for Spearman correlation (1-based)."""
+    arr = np.asarray(values, dtype=float)
+    order = np.argsort(arr, kind="mergesort")
+    ranks = np.empty(len(arr), dtype=float)
+    i = 0
+    while i < len(arr):
+        j = i
+        while j + 1 < len(arr) and arr[order[j + 1]] == arr[order[i]]:
+            j += 1
+        avg_rank = 0.5 * (i + j) + 1.0
+        ranks[order[i : j + 1]] = avg_rank
+        i = j + 1
+    return ranks
+
+
+def _spearman_corr(x: list[float], y: list[float]) -> float:
+    if len(x) < 3 or len(x) != len(y):
+        return 0.0
+    corr = float(np.corrcoef(_average_ranks(x), _average_ranks(y))[0, 1])
+    if np.isnan(corr):
+        return 0.0
+    return corr
+
+
 def _incident_to_portfolio(row: dict[str, Any]) -> AssetPortfolio:
     night_shift = row.get("shift_type") == "night"
     ppe = str(row.get("ppe_worn", "partial"))
@@ -202,14 +227,10 @@ class HFBenchmarkRunner:
             baseline_scores.append(_baseline_incident_score(row))
 
         if len(rows) > 2:
-            pioneer_corr = float(np.corrcoef(severities, pioneer_scores)[0, 1])
-            baseline_corr = float(np.corrcoef(severities, baseline_scores)[0, 1])
+            pioneer_corr = _spearman_corr(severities, pioneer_scores)
+            baseline_corr = _spearman_corr(severities, baseline_scores)
         else:
             pioneer_corr = 0.0
-            baseline_corr = 0.0
-        if np.isnan(pioneer_corr):
-            pioneer_corr = 0.0
-        if np.isnan(baseline_corr):
             baseline_corr = 0.0
 
         return HFBenchmarkTaskResult(
@@ -266,7 +287,10 @@ class HFBenchmarkRunner:
         return HFBenchmarkTaskResult(
             task="news_risk_relevance",
             dataset="pioneer/curated-news-risk-en",
-            dataset_url="https://huggingface.co/datasets",
+            dataset_url=(
+                "https://github.com/CatCorner22/LLM/blob/main/"
+                "src/pioneer/intelligence/benchmark/hf_datasets.py"
+            ),
             samples=len(items),
             pioneer_score=round(pioneer_f1, 4),
             baseline_score=round(baseline_f1, 4),

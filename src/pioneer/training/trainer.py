@@ -60,6 +60,14 @@ class Trainer:
         seed = self.config.seed
         random.seed(seed)
         np.random.seed(seed)
+        try:
+            import torch
+
+            torch.manual_seed(seed)
+            if torch.cuda.is_available():
+                torch.cuda.manual_seed_all(seed)
+        except ImportError:
+            pass
         settings.seed = seed
 
     def _emit(self, hook: str) -> None:
@@ -75,6 +83,8 @@ class Trainer:
             "epoch": 0,
             "step": 0,
             "loss": float("inf"),
+            "log_every_n_steps": self.config.log_every_n_steps,
+            "artifacts": [],
         }
         self._emit("on_train_begin")
 
@@ -87,10 +97,17 @@ class Trainer:
                 metrics = self.train_fn(self._state)
                 final_metrics = metrics
                 self._state.update(metrics)
+                if "step" in metrics:
+                    self._emit("on_step_end")
                 self._emit("on_epoch_end")
 
-                if self.config.max_steps and self._state.get("step", 0) >= self.config.max_steps:
+                if (
+                    self.config.max_steps
+                    and float(self._state.get("step", 0)) >= self.config.max_steps
+                ):
                     break
+        except TrainingError:
+            raise
         except Exception as exc:
             raise TrainingError(
                 f"Training failed for experiment '{self.config.experiment_name}'",
@@ -100,9 +117,11 @@ class Trainer:
         self._emit("on_train_end")
         logger.info("training_result", metrics=final_metrics)
 
+        artifacts = self._state.get("artifacts", [])
         return TrainingResult(
             experiment_name=self.config.experiment_name,
-            epochs_completed=self._state["epoch"],
-            final_loss=final_metrics.get("loss", float("inf")),
-            metrics=final_metrics,
+            epochs_completed=int(self._state["epoch"]),
+            final_loss=float(final_metrics.get("loss", float("inf"))),
+            metrics={k: float(v) for k, v in final_metrics.items() if isinstance(v, (int, float))},
+            artifacts=list(artifacts) if isinstance(artifacts, list) else [],
         )

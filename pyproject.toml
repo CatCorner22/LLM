@@ -39,11 +39,13 @@ llm = [
 ]
 training = [
     "torch>=2.3,<3",
-    "transformers>=4.44,<5",
+    "transformers>=4.44,<6",
     "datasets>=2.20,<4",
     "accelerate>=0.33,<2",
     "peft>=0.12,<1",
-    "trl>=0.9,<1",
+    "trl>=0.12,<1",
+    "trackio>=0.1",
+    "huggingface-hub>=0.24",
 ]
 rag = [
     "chromadb>=0.5,<2",
@@ -149,6 +151,9 @@ ignore = ["PLR0913", "PLR2004", "TC001", "TC003", "PLW0108", "UP042", "B024"]
 "src/pioneer/intelligence/ingestion/feeds.py" = ["ICN001", "DTZ007"]
 "src/pioneer/intelligence/risk/composite.py" = ["RUF012"]
 "src/pioneer/intelligence/risk/governance.py" = ["PLC0415"]
+"src/pioneer/training/sft.py" = ["PLC0415"]
+"src/pioneer/cli/train.py" = ["PLC0415"]
+"src/pioneer/training/trainer.py" = ["PLC0415"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["pioneer"]
@@ -179,5 +184,11 @@ module = [
     "sklearn.*",
     "transformers.*",
     "huggingface_hub.*",
+    "trackio",
+    "trackio.*",
+    "trl",
+    "trl.*",
+    "peft",
+    "peft.*",
 ]
 ignore_missing_imports = true
