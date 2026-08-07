@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 
+from pioneer.intelligence.risk.competency import competency_exposure_gap
 from pioneer.intelligence.risk.models import (
     AssetPortfolio,
     OperationalProfile,
@@ -59,6 +60,21 @@ class AccidentLikelihoodModel:
         if operational:
             training_gap = max(0.0, 1.0 - operational.safety_training_hours / 40.0)
 
+        competency_gap = 0.0
+        if portfolio.competency:
+            competency_gap = competency_exposure_gap(portfolio.competency)
+            if portfolio.competency.history and len(portfolio.competency.history) >= 2:
+                ordered = sorted(
+                    portfolio.competency.history, key=lambda snapshot: snapshot.captured_at
+                )
+                transfer_delta = (
+                    ordered[-1].scenario_transfer_score - ordered[0].scenario_transfer_score
+                )
+                if transfer_delta <= -0.05:
+                    competency_gap = min(1.0, competency_gap + 0.1)
+
+        exposure = night_shift + max(training_gap, competency_gap) * 0.5
+
         return np.array(
             [
                 building_age_norm,
@@ -66,7 +82,7 @@ class AccidentLikelihoodModel:
                 weather_risk,
                 pipe_risk,
                 maintenance_norm + incident_norm * 0.5,
-                night_shift + training_gap * 0.5,
+                exposure,
             ],
             dtype=float,
         )

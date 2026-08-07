@@ -65,5 +65,7 @@ def test_intelligence_relationship_map_endpoint() -> None:
     focus = payload["focus_areas"]
     assert "employee_conduct" in focus or "segregation_of_duties" in focus
     assert "acquisition_assessments" in payload
-    assert payload["acquisition_assessments"]
+    assert len(payload["acquisition_assessments"]) >= 2
+    assert "portfolio_competency" in payload
+    assert payload["portfolio_competency"] is not None
     assert "knowledge_acquisition" in focus

@@ -12,6 +12,8 @@ from pioneer.intelligence.relationships.acquisition import (
     CompetencyAssessment,
     ExpertiseLevel,
     KnowledgeAcquisitionAssessor,
+    PortfolioCompetencyReport,
+    TrendDirection,
 )
 from pioneer.intelligence.risk.models import AssetPortfolio, RiskAssessment, RiskCategory
 
@@ -56,6 +58,7 @@ class KnowledgeRelationshipMap(BaseModel):
     edges: list[MapEdge] = Field(default_factory=list)
     focus_areas: list[str] = Field(default_factory=list)
     acquisition_assessments: list[CompetencyAssessment] = Field(default_factory=list)
+    portfolio_competency: PortfolioCompetencyReport | None = None
 
 
 KNOWLEDGE_TO_RISK: dict[KnowledgeCategory, list[RiskCategory]] = {
@@ -302,6 +305,16 @@ def _acquisition_edges(
                 rationale="Verified expertise mitigates accident likelihood",
             )
         )
+    if assessment.trend == TrendDirection.DECAYING:
+        edges.append(
+            MapEdge(
+                source=node_id,
+                target="risk:operational",
+                relationship=RelationshipType.ELEVATES,
+                weight=0.6,
+                rationale="Skill decay elevates operational risk until refresh completed",
+            )
+        )
     return edges
 
 
@@ -330,10 +343,15 @@ class RelationshipMapBuilder:
             edges.extend(_assessment_edges(assessment, nodes))
 
         acquisition_assessments: list[CompetencyAssessment] = []
+        portfolio_report: PortfolioCompetencyReport | None = None
         if portfolio and portfolio.competency:
-            competency_result = self.acquisition_assessor.assess(portfolio.competency)
-            acquisition_assessments.append(competency_result)
-            edges.extend(_acquisition_edges(competency_result, nodes))
+            portfolio_report = self.acquisition_assessor.assess_portfolio(portfolio.competency)
+            acquisition_assessments = [
+                portfolio_report.aggregate,
+                *portfolio_report.skill_assessments,
+            ]
+            for competency_result in acquisition_assessments:
+                edges.extend(_acquisition_edges(competency_result, nodes))
 
         present_categories = {record.category for record in records}
         focus = [
@@ -346,6 +364,7 @@ class RelationshipMapBuilder:
             edges=edges,
             focus_areas=focus,
             acquisition_assessments=acquisition_assessments,
+            portfolio_competency=portfolio_report,
         )
 
 

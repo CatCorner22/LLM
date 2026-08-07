@@ -127,9 +127,10 @@ def test_advisor_includes_acquisition_signals() -> None:
         run_scenarios=False,
     )
     assert report.acquisition_signals
+    assert report.drill_recommendations
     assert any("rote_repetition" in signal for signal in report.acquisition_signals)
     assessments = report.relationship_map.get("acquisition_assessments", [])
-    assert assessments
+    assert len(assessments) >= 2
     assert "knowledge_acquisition" in report.relationship_map.get("focus_areas", [])
     acquisition_recs = [
         rec for rec in report.recommendations if "knowledge_acquisition" in rec.evidence_sources

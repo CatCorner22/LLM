@@ -1,5 +1,6 @@
 """Risk assessment models for buildings, weather, infrastructure, and accidents."""
 
+from pioneer.intelligence.competency_models import CompetencySnapshot, SkillCompetency
 from pioneer.intelligence.risk.accident import AccidentLikelihoodModel
 from pioneer.intelligence.risk.building import BuildingRiskAssessor
 from pioneer.intelligence.risk.composite import CompositeRiskEngine
@@ -26,6 +27,7 @@ __all__ = [
     "BuildingProfile",
     "BuildingRiskAssessor",
     "CompetencyProfile",
+    "CompetencySnapshot",
     "CompositeRiskEngine",
     "GovernanceProfile",
     "GovernanceRiskAssessor",
@@ -36,6 +38,7 @@ __all__ = [
     "RiskCategory",
     "RiskFactor",
     "RiskSeverity",
+    "SkillCompetency",
     "WeatherProfile",
     "WeatherRiskAssessor",
 ]

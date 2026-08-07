@@ -42,6 +42,24 @@ class AutonomousScenarioRunner:
     def __init__(self, engine: CompositeRiskEngine | None = None) -> None:
         self.engine = engine or CompositeRiskEngine()
 
+    def _apply_competency_param(
+        self, portfolio: AssetPortfolio, param_name: str, delta: float
+    ) -> None:
+        competency = portfolio.competency
+        if competency is None:
+            return
+        if param_name == "assessment_count":
+            portfolio.competency = competency.model_copy(
+                update={"assessment_count": max(0, int(competency.assessment_count + delta))}
+            )
+            return
+        current = getattr(competency, param_name, None)
+        if not isinstance(current, float):
+            return
+        updated = current + delta
+        updated = max(0.0, updated) if delta < 0 else min(1.0, updated)
+        portfolio.competency = competency.model_copy(update={param_name: updated})
+
     def _apply_scenario(
         self, portfolio: AssetPortfolio, scenario: ScenarioDefinition
     ) -> AssetPortfolio:
@@ -66,6 +84,8 @@ class AutonomousScenarioRunner:
                 for pipe in stressed.pipes:
                     pipe.inspection_score = max(0.0, pipe.inspection_score - 0.2)
                     pipe.soil_corrosivity = min(1.0, pipe.soil_corrosivity + 0.15)
+            elif stressed.competency:
+                self._apply_competency_param(stressed, param.name, param.delta)
 
         return stressed
 

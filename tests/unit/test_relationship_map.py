@@ -61,6 +61,7 @@ def test_relationship_map_focus_areas() -> None:
     assert "employee_conduct" in focus or "segregation_of_duties" in focus
     assert "knowledge_acquisition" in focus
     assert rel_map.acquisition_assessments
+    assert rel_map.portfolio_competency is not None
 
 
 @pytest.mark.unit

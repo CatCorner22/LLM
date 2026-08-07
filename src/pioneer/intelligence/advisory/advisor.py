@@ -12,7 +12,12 @@ from pioneer.intelligence.advisory.recommendations import (
 from pioneer.intelligence.ingestion.feeds import FeedItem
 from pioneer.intelligence.ingestion.knowledge import KnowledgeCategory, KnowledgeRecord
 from pioneer.intelligence.ingestion.scheduler import KnowledgeStore
-from pioneer.intelligence.relationships.acquisition import CompetencyAssessment, ExpertiseLevel
+from pioneer.intelligence.relationships.acquisition import (
+    CompetencyAssessment,
+    DrillRecommendation,
+    ExpertiseLevel,
+    TrendDirection,
+)
 from pioneer.intelligence.relationships.map import RelationshipMapBuilder
 from pioneer.intelligence.risk.composite import CompositeRiskEngine
 from pioneer.intelligence.risk.models import AssetPortfolio, RiskAssessment, RiskCategory
@@ -150,6 +155,26 @@ class BusinessAdvisor:
                             evidence_sources=["segregation_of_duties"],
                         )
                     )
+                elif "acquisition" in factor.name or "knowledge" in factor.name:
+                    recs.append(
+                        BusinessRecommendation(
+                            id=f"rec_{rec_id}",
+                            title="Close workforce understanding gaps",
+                            description=(
+                                "Competency assessments indicate rote repetition or unverified "
+                                "expertise. Deploy scenario-transfer drills and explanation audits "
+                                "before relying on training completion metrics alone."
+                            ),
+                            category=RecommendationCategory.OPERATIONS,
+                            priority=RecommendationPriority.IMMEDIATE
+                            if factor.score >= 0.5
+                            else RecommendationPriority.SHORT_TERM,
+                            estimated_cost_usd=2500.0,
+                            risk_reduction=min(0.35, factor.score * 0.45),
+                            rationale=[factor.description, *factor.evidence],
+                            evidence_sources=["knowledge_acquisition"],
+                        )
+                    )
 
         if assessment.accident_probability and assessment.accident_probability > 0.15:
             rec_id += 1
@@ -176,6 +201,7 @@ class BusinessAdvisor:
     def _recommendations_from_acquisition(
         self,
         assessments: list[CompetencyAssessment],
+        drills: list[DrillRecommendation],
         start_id: int,
     ) -> list[BusinessRecommendation]:
         recs: list[BusinessRecommendation] = []
@@ -199,7 +225,10 @@ class BusinessAdvisor:
                         estimated_cost_usd=2000.0,
                         risk_reduction=min(0.3, assessment.rote_repetition_score * 0.5),
                         rationale=[assessment.summary, *assessment.recommended_actions],
-                        evidence_sources=["knowledge_acquisition"],
+                        evidence_sources=[
+                            "knowledge_acquisition",
+                            assessment.skill_id or "aggregate",
+                        ],
                     )
                 )
             elif assessment.expertise_level == ExpertiseLevel.UNVERIFIED:
@@ -220,16 +249,90 @@ class BusinessAdvisor:
                         evidence_sources=["knowledge_acquisition"],
                     )
                 )
+            elif assessment.expertise_level == ExpertiseLevel.DEVELOPING:
+                rec_id += 1
+                recs.append(
+                    BusinessRecommendation(
+                        id=f"rec_{rec_id}",
+                        title=(
+                            f"Strengthen {assessment.weakest_signal or 'competency'} "
+                            "before expert sign-off"
+                        ),
+                        description=(
+                            f"Mixed acquisition signals for {assessment.skill_id or 'workforce'}. "
+                            + " ".join(assessment.recommended_actions)
+                        ),
+                        category=RecommendationCategory.OPERATIONS,
+                        priority=RecommendationPriority.SHORT_TERM,
+                        estimated_cost_usd=1800.0,
+                        risk_reduction=0.2,
+                        rationale=[assessment.summary],
+                        evidence_sources=["knowledge_acquisition"],
+                    )
+                )
+            elif (
+                assessment.expertise_level == ExpertiseLevel.EXPERT
+                and assessment.trend == TrendDirection.DECAYING
+            ):
+                rec_id += 1
+                recs.append(
+                    BusinessRecommendation(
+                        id=f"rec_{rec_id}",
+                        title="Prevent expert skill decay",
+                        description=(
+                            "Historical snapshots show declining transfer and explanation scores. "
+                            "Schedule refresh drills before expert designation lapses."
+                        ),
+                        category=RecommendationCategory.OPERATIONS,
+                        priority=RecommendationPriority.SHORT_TERM,
+                        estimated_cost_usd=1200.0,
+                        risk_reduction=0.15,
+                        rationale=[assessment.summary],
+                        evidence_sources=["knowledge_acquisition"],
+                    )
+                )
+
+        for drill in drills[:5]:
+            rec_id += 1
+            priority = RecommendationPriority.IMMEDIATE
+            if drill.priority == "short_term":
+                priority = RecommendationPriority.SHORT_TERM
+            elif drill.priority == "monitor":
+                priority = RecommendationPriority.MONITOR
+            recs.append(
+                BusinessRecommendation(
+                    id=f"rec_{rec_id}",
+                    title=drill.title,
+                    description=(
+                        f"{drill.rationale} Success criteria: "
+                        + "; ".join(drill.success_criteria[:2])
+                    ),
+                    category=RecommendationCategory.OPERATIONS,
+                    priority=priority,
+                    estimated_cost_usd=float(drill.estimated_minutes * 2),
+                    risk_reduction=min(0.25, drill.confidence_impact),
+                    rationale=drill.success_criteria,
+                    evidence_sources=["knowledge_acquisition", drill.drill_id],
+                )
+            )
         return recs
 
     def _acquisition_signals(self, assessments: list[CompetencyAssessment]) -> list[str]:
-        return [
-            (
-                f"[{item.subject_id}] {item.expertise_level.value}: {item.summary} "
-                f"(expertise={item.expertise_score:.2f}, rote={item.rote_repetition_score:.2f})"
+        signals: list[str] = []
+        for item in assessments:
+            skill_label = f"skill={item.skill_id} " if item.skill_id else ""
+            trend_label = f" trend={item.trend.value}" if item.trend else ""
+            confidence_note = ""
+            if item.confidence_breakdown and item.confidence_breakdown.limiting_factors:
+                confidence_note = (
+                    f" limits={'; '.join(item.confidence_breakdown.limiting_factors[:2])}"
+                )
+            signals.append(
+                f"[{item.subject_id}] {skill_label}{item.expertise_level.value}: {item.summary} "
+                f"(expertise={item.expertise_score:.2f}, rote={item.rote_repetition_score:.2f}, "
+                f"confidence={item.confidence:.2f}{trend_label}{confidence_note})"
             )
-            for item in assessments
-        ]
+        return signals
 
     def _scenario_highlights(self, scenario_result: ScenarioRunResult) -> list[str]:
         return [
@@ -277,9 +380,12 @@ class BusinessAdvisor:
         relationship_map = RelationshipMapBuilder().build(records, assessment, portfolio)
 
         recommendations = self._recommendations_from_assessment(assessment)
+        portfolio_report = relationship_map.portfolio_competency
+        all_drills = portfolio_report.all_drills if portfolio_report else []
         recommendations.extend(
             self._recommendations_from_acquisition(
                 relationship_map.acquisition_assessments,
+                all_drills,
                 len(recommendations),
             )
         )
@@ -335,6 +441,7 @@ class BusinessAdvisor:
             health_signals=self._knowledge_signals(records, KnowledgeCategory.HEALTH),
             governance_signals=self._governance_signals(records),
             acquisition_signals=self._acquisition_signals(relationship_map.acquisition_assessments),
+            drill_recommendations=[drill.model_dump() for drill in all_drills[:10]],
             relationship_map=relationship_map.model_dump(),
         )
 

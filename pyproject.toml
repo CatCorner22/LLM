@@ -148,6 +148,7 @@ ignore = ["PLR0913", "PLR2004", "TC001", "TC003", "PLW0108", "UP042", "B024"]
 "src/pioneer/intelligence/ingestion/scheduler.py" = ["PLC0415"]
 "src/pioneer/intelligence/ingestion/feeds.py" = ["ICN001", "DTZ007"]
 "src/pioneer/intelligence/risk/composite.py" = ["RUF012"]
+"src/pioneer/intelligence/risk/governance.py" = ["PLC0415"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["pioneer"]

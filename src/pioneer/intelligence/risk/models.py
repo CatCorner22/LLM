@@ -8,6 +8,31 @@ from enum import StrEnum
 import numpy as np
 from pydantic import BaseModel, Field
 
+from pioneer.intelligence.competency_models import (
+    CompetencyProfile,
+    CompetencySnapshot,
+    SkillCompetency,
+)
+
+__all__ = [
+    "AssetPortfolio",
+    "BuildingProfile",
+    "CompetencyProfile",
+    "CompetencySnapshot",
+    "GovernanceProfile",
+    "OperationalProfile",
+    "PipeProfile",
+    "RiskAssessment",
+    "RiskCategory",
+    "RiskFactor",
+    "RiskSeverity",
+    "SkillCompetency",
+    "WeatherProfile",
+    "logistic_probability",
+    "severity_from_score",
+    "weibull_failure_probability",
+]
+
 
 class RiskSeverity(StrEnum):
     LOW = "low"
@@ -99,19 +124,6 @@ class GovernanceProfile(BaseModel):
     sod_conflicts: int = Field(default=0, ge=0)
     role_overlap_ratio: float = Field(default=0.1, ge=0.0, le=1.0)
     dual_control_gaps: int = Field(default=0, ge=0)
-
-
-class CompetencyProfile(BaseModel):
-    """Signals to distinguish expertise from rote repetition."""
-
-    asset_id: str
-    training_completion_rate: float = Field(default=0.9, ge=0.0, le=1.0)
-    scenario_transfer_score: float = Field(default=0.7, ge=0.0, le=1.0)
-    explanation_audit_score: float = Field(default=0.7, ge=0.0, le=1.0)
-    novel_condition_error_rate: float = Field(default=0.15, ge=0.0, le=1.0)
-    practical_demonstration_rate: float = Field(default=0.75, ge=0.0, le=1.0)
-    certification_only_ratio: float = Field(default=0.2, ge=0.0, le=1.0)
-    assessment_count: int = Field(default=1, ge=0)
 
 
 class AssetPortfolio(BaseModel):

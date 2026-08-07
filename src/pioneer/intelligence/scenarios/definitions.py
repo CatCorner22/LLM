@@ -14,6 +14,7 @@ class ScenarioType(StrEnum):
     MAINTENANCE_DELAY = "maintenance_delay"
     REGULATORY_CHANGE = "regulatory_change"
     SUPPLY_DISRUPTION = "supply_disruption"
+    COMPETENCY_STRESS = "competency_stress"
 
 
 class ScenarioParameter(BaseModel):
@@ -83,5 +84,22 @@ DEFAULT_SCENARIOS: list[ScenarioDefinition] = [
         description="Mandatory pipe inspection and building code update",
         parameters=[ScenarioParameter(name="compliance_cost_multiplier", delta=1.3)],
         probability=0.1,
+    ),
+    ScenarioDefinition(
+        id="scn_competency_stress",
+        name="Workforce Turnover and Training Rush",
+        scenario_type=ScenarioType.COMPETENCY_STRESS,
+        description=(
+            "Rapid hiring and compressed onboarding erodes transfer scores "
+            "and increases certification-only compliance"
+        ),
+        parameters=[
+            ScenarioParameter(name="training_completion_rate", delta=0.15),
+            ScenarioParameter(name="scenario_transfer_score", delta=-0.18),
+            ScenarioParameter(name="explanation_audit_score", delta=-0.12),
+            ScenarioParameter(name="certification_only_ratio", delta=0.2),
+            ScenarioParameter(name="assessment_count", delta=-1.0),
+        ],
+        probability=0.14,
     ),
 ]

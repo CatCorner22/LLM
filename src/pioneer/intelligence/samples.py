@@ -1,9 +1,15 @@
 """Sample asset portfolio for demos and benchmarks."""
 
+from datetime import UTC, datetime
+
+from pioneer.intelligence.competency_models import (
+    CompetencyProfile,
+    CompetencySnapshot,
+    SkillCompetency,
+)
 from pioneer.intelligence.risk.models import (
     AssetPortfolio,
     BuildingProfile,
-    CompetencyProfile,
     GovernanceProfile,
     OperationalProfile,
     PipeProfile,
@@ -79,5 +85,83 @@ def sample_portfolio() -> AssetPortfolio:
             practical_demonstration_rate=0.35,
             certification_only_ratio=0.72,
             assessment_count=3,
+            skills=[
+                SkillCompetency(
+                    skill_id="lockout_tagout",
+                    role="maintenance",
+                    criticality=0.95,
+                    training_completion_rate=0.98,
+                    scenario_transfer_score=0.35,
+                    explanation_audit_score=0.32,
+                    novel_condition_error_rate=0.55,
+                    practical_demonstration_rate=0.28,
+                    certification_only_ratio=0.82,
+                    assessment_count=2,
+                ),
+                SkillCompetency(
+                    skill_id="confined_space",
+                    role="operations",
+                    criticality=0.9,
+                    training_completion_rate=0.92,
+                    scenario_transfer_score=0.78,
+                    explanation_audit_score=0.81,
+                    novel_condition_error_rate=0.14,
+                    practical_demonstration_rate=0.85,
+                    certification_only_ratio=0.18,
+                    assessment_count=4,
+                ),
+                SkillCompetency(
+                    skill_id="hazmat_handling",
+                    role="facilities",
+                    criticality=0.85,
+                    training_completion_rate=0.94,
+                    scenario_transfer_score=0.48,
+                    explanation_audit_score=0.41,
+                    novel_condition_error_rate=0.42,
+                    practical_demonstration_rate=0.38,
+                    certification_only_ratio=0.68,
+                    assessment_count=3,
+                ),
+            ],
+            history=[
+                CompetencySnapshot(
+                    captured_at=datetime(2025, 6, 1, tzinfo=UTC),
+                    training_completion_rate=0.88,
+                    scenario_transfer_score=0.58,
+                    explanation_audit_score=0.52,
+                    novel_condition_error_rate=0.32,
+                    practical_demonstration_rate=0.48,
+                ),
+                CompetencySnapshot(
+                    captured_at=datetime(2025, 12, 1, tzinfo=UTC),
+                    training_completion_rate=0.92,
+                    scenario_transfer_score=0.5,
+                    explanation_audit_score=0.45,
+                    novel_condition_error_rate=0.4,
+                    practical_demonstration_rate=0.41,
+                ),
+                CompetencySnapshot(
+                    captured_at=datetime(2026, 2, 1, tzinfo=UTC),
+                    training_completion_rate=0.95,
+                    scenario_transfer_score=0.42,
+                    explanation_audit_score=0.38,
+                    novel_condition_error_rate=0.48,
+                    practical_demonstration_rate=0.35,
+                ),
+            ],
         ),
+    )
+
+
+def expert_competency_profile(asset_id: str = "EXP-DEMO") -> CompetencyProfile:
+    """Verified expert profile for benchmark comparisons."""
+    return CompetencyProfile(
+        asset_id=asset_id,
+        training_completion_rate=0.96,
+        scenario_transfer_score=0.9,
+        explanation_audit_score=0.88,
+        novel_condition_error_rate=0.07,
+        practical_demonstration_rate=0.93,
+        certification_only_ratio=0.12,
+        assessment_count=5,
     )
