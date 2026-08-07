@@ -154,7 +154,7 @@ ignore = ["PLR0913", "PLR2004", "TC001", "TC003", "PLW0108", "UP042", "B024"]
 known-first-party = ["pioneer"]
 
 [tool.mypy]
-python_version = "3.11"
+python_version = "3.12"
 strict = true
 warn_unreachable = true
 warn_unused_configs = true
