@@ -62,3 +62,11 @@ class RAGError(PioneerError):
 
 class ExternalServiceError(PioneerError):
     """Upstream API or service failure."""
+
+
+class RiskError(PioneerError):
+    """Risk assessment or scenario analysis failure."""
+
+
+class IngestionError(PioneerError):
+    """External information ingestion failure."""

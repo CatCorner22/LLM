@@ -79,6 +79,9 @@ all = [
 pioneer-train = "pioneer.cli.train:main"
 pioneer-serve = "pioneer.cli.serve:main"
 pioneer-eval = "pioneer.cli.eval:main"
+pioneer-advise = "pioneer.cli.advise:main"
+pioneer-scenarios = "pioneer.cli.scenarios:main"
+pioneer-benchmark = "pioneer.cli.benchmark:main"
 
 [project.urls]
 Documentation = "https://github.com/pioneer-ml/pioneer-ml#readme"
@@ -125,7 +128,9 @@ ignore = ["PLR0913", "PLR2004", "TC001", "TC003", "PLW0108", "UP042", "B024"]
 "tests/**" = ["PLC0415", "ARG002", "TC003"]
 "src/pioneer/cli/serve.py" = ["PLC0415"]
 "src/pioneer/inference/engine.py" = ["PLC0415"]
-"src/pioneer/observability/telemetry.py" = ["PLC0415"]
+"src/pioneer/intelligence/benchmark/competitors.py" = ["PLC0415", "ARG002"]
+"src/pioneer/intelligence/ingestion/feeds.py" = ["ICN001", "DTZ007"]
+"src/pioneer/intelligence/risk/composite.py" = ["RUF012"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["pioneer"]

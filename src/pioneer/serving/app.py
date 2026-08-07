@@ -30,6 +30,9 @@ class PredictResponse(BaseModel):
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 
+from pioneer.serving.intelligence import router as intelligence_router
+
+
 def create_app() -> FastAPI:
     configure_logging()
     settings = get_settings()
@@ -48,5 +51,7 @@ def create_app() -> FastAPI:
     async def predict(request: PredictRequest) -> PredictResponse:
         logger.info("predict_request", input_length=len(request.input))
         return PredictResponse(output=f"echo: {request.input}", metadata=request.metadata)
+
+    app.include_router(intelligence_router)
 
     return app
