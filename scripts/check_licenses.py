@@ -107,10 +107,7 @@ def check_allowlist(*, strict: bool) -> int:
             )
         return result.returncode
 
-    print(
-        f"License check passed: all {len(packages)} project dependencies "
-        "use approved licenses."
-    )
+    print(f"License check passed: all {len(packages)} project dependencies use approved licenses.")
     return 0
 
 
